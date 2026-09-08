@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Grant Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    header {
+      background: #243b53;
+      color: #fff;
+      padding: 1rem 2rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    header p {
+      margin: 0.3rem 0 0;
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    main {
+      padding: 1.5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) 1fr;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
+    form {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .field {
+      margin-bottom: 0.75rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      border: 1px solid #cbd2e1;
+      box-sizing: border-box;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #2b6cb0;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #245a94;
+    }
+
+    .btn-secondary {
+      background: #edf2f7;
+      color: #2d3748;
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .table-container {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    thead {
+      background: #f1f5f9;
+    }
+
+    th, td {
+      padding: 0.5rem 0.4rem;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-Research { background: #edf2ff; color: #3730a3; }
+    .status-Drafting { background: #e0f2fe; color: #0369a1; }
+    .status-Submitted { background: #ecfdf5; color: #15803d; }
+    .status-Awarded { background: #fef3c7; color: #92400e; }
+    .status-Declined { background: #fee2e2; color: #b91c1c; }
+
+    .actions button {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      margin-right: 0.25rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filters label {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .filters select,
+    .filters input {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.4rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grant Tracker</h1>
+    <p>Interactive tracker for grant applications for your charity.</p>
+  </header>
+
+  <main>
+    <div class="layout">
+      <!-- Form panel -->
+      <section>
+        <h2>Add / Edit Grant</h2>
+        <form id="grantForm">
+          <input type="hidden" id="grantId" />
+
+          <div class="field">
+            <label for="grantName">Grant name</label>
+            <input id="grantName" required placeholder="e.g., Ontario Trillium Foundation – Seed Grant" />
+          </div>
+
+          <div class="field">
+            <label for="programName">Program name</label>
+            <input id="programName" placeholder="e.g., Community Building Program" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="grantSize">Grant size (amount)</label>
+              <input id="grantSize" type="number" min="0" step="100" placeholder="e.g., 50000" />
+            </div>
+            <div class="field">
+              <label for="owner">Owner / lead</label>
+              <input id="owner" placeholder="e.g., Sarat" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="status">Status</label>
+              <select id="status">
+                <option value="Research">Research</option>
+                <option value="Drafting">Drafting</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Awarded">Awarded</option>
+                <option value="Declined">Declined</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="targetCompletion">Target completion date</label>
+              <input id="targetCompletion" type="date" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="applicationDue">Application due date</label>
+              <input id="applicationDue" type="date" />
+            </div>
+            <div class="field">
+              <label for="contactInfo">Contact info</label>
+              <input id="contactInfo" placeholder="Name, email, phone" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes</label>
+            <textarea id="notes" placeholder="Key requirements, risks, next steps"></textarea>
+          </div>
+
+          <div class="controls">
+            <button type="submit" class="btn-primary">Save grant</button>
+            <button type="button" class="btn-secondary" id="resetFormBtn">Clear form</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Table panel -->
+      <section>
+        <h2>Grants overview</h2>
+
+        <div class="filters">
+          <div>
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus">
+              <option value="">All</option>
+              <option value="Research">Research</option>
+              <option value="Drafting">Drafting</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Awarded">Awarded</option>
+              <option value="Declined">Declined</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterOwner">Owner</label>
+            <input id="filterOwner" placeholder="Filter by owner" />
+          </div>
+          <button class="btn-secondary" id="clearFiltersBtn">Clear filters</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Grant</th>
+                <th>Program</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Target completion</th>
+                <th>Due date</th>
+                <th>Contact</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="grantsTableBody">
+              <!-- Rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "grantTrackerData_v1";
+
+    function loadGrants() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveGrants(grants) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(grants));
+    }
+
+    function generateId() {
+      return "g_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+    }
+
+    function getFormData() {
+      return {
+        id: document.getElementById("grantId").value || generateId(),
+        grantName: document.getElementById("grantName").value.trim(),
+        programName: document.getElementById("programName").value.trim(),
+        grantSize: document.getElementById("grantSize").value.trim(),
+        owner: document.getElementById("owner").value.trim(),
+        status: document.getElementById("status").value,
+        targetCompletion: document.getElementById("targetCompletion").value,
+        applicationDue: document.getElementById("applicationDue").value,
+        contactInfo: document.getElementById("contactInfo").value.trim(),
+        notes: document.getElementById("notes").value.trim()
+      };
+    }
+
+    function setFormData(grant) {
+      document.getElementById("grantId").value = grant.id || "";
+      document.getElementById("grantName").value = grant.grantName || "";
+      document.getElementById("programName").value = grant.programName || "";
+      document.getElementById("grantSize").value = grant.grantSize || "";
+      document.getElementById("owner").value = grant.owner || "";
+      document.getElementById("status").value = grant.status || "Research";
+      document.getElementById("targetCompletion").value = grant.targetCompletion || "";
+      document.getElementById("applicationDue").value = grant.applicationDue || "";
+      document.getElementById("contactInfo").value = grant.contactInfo || "";
+      document.getElementById("notes").value = grant.notes || "";
+    }
+
+    function clearForm() {
+      setFormData({
+        id: "",
+        grantName: "",
+        programName: "",
+        grantSize: "",
+        owner: "",
+        status: "Research",
+        targetCompletion: "",
+        applicationDue: "",
+        contactInfo: "",
+        notes: ""
+      });
+    }
+
+    function renderTable() {
+      const grants = loadGrants();
+      const tbody = document.getElementById("grantsTableBody");
+      tbody.innerHTML = "";
+
+      const filterStatus = document.getElementById("filterStatus").value;
+      const filterOwner = document.getElementById("filterOwner").value.trim().toLowerCase();
+
+      const filtered = grants.filter(g => {
+        const statusMatch = !filterStatus || g.status === filterStatus;
+        const ownerMatch = !filterOwner || (g.owner || "").toLowerCase().includes(filterOwner);
+        return statusMatch && ownerMatch;
+      });
+
+      if (filtered.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 10;
+        td.textContent = "No grants found. Add a grant using the form on the left.";
+        td.style.fontStyle = "italic";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach(grant => {
+        const tr = document.createElement("tr");
+
+        const tdGrant = document.createElement("td");
+        tdGrant.textContent = grant.grantName;
+        tr.appendChild(tdGrant);
+
+        const tdProgram = document.createElement("td");
+        tdProgram.textContent = grant.programName || "";
+        tr.appendChild(tdProgram);
+
+        const tdSize = document.createElement("td");
+        tdSize.textContent = grant.grantSize ? `\$${Number(grant.grantSize).toLocaleString()}` : "";
+        tr.appendChild(tdSize);
+
+        const tdStatus = document.createElement("td");
+        const spanStatus = document.createElement("span");
+        spanStatus.textContent = grant.status;
+        spanStatus.className = "status-pill status-" + grant.status;
+        tdStatus.appendChild(spanStatus);
+        tr.appendChild(tdStatus);
+
+        const tdOwner = document.createElement("td");
+        tdOwner.textContent = grant.owner || "";
+        tr.appendChild(tdOwner);
+
+        const tdTarget = document.createElement("td");
+        tdTarget.textContent = grant.targetCompletion || "";
+        tr.appendChild(tdTarget);
+
+        const tdDue = document.createElement("td");
+        tdDue.textContent = grant.applicationDue || "";
+        tr.appendChild(tdDue);
+
+        const tdContact = document.createElement("td");
+        tdContact.textContent = grant.contactInfo || "";
+        tr.appendChild(tdContact);
+
+        const tdNotes = document.createElement("td");
+        tdNotes.textContent = grant.notes || "";
+        tr.appendChild(tdNotes);
+
+        const tdActions = document.createElement("td");
+        tdActions.className = "actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "btn-secondary";
+        editBtn.addEventListener("click", () => {
+          setFormData(grant);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+        tdActions.appendChild(editBtn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.style.background = "#fed7d7";
+        deleteBtn.style.color = "#742a2a";
+        deleteBtn.addEventListener("click", () => {
+          if (confirm("Delete this grant?")) {
+            const updated = loadGrants().filter(g => g.id !== grant.id);
+            saveGrants(updated);
+            renderTable();
+          }
+        });
+        tdActions.appendChild(deleteBtn);
+
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("grantForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = getFormData();
+      if (!data.grantName) {
+        alert("Grant name is required.");
+        return;
+      }
+
+      const grants = loadGrants();
+      const existingIndex = grants.findIndex(g => g.id === data.id);
+
+      if (existingIndex >= 0) {
+        grants[existingIndex] = data;
+      } else {
+        grants.push(data);
+      }
+
+      saveGrants(grants);
+      clearForm();
+      renderTable();
+    });
+
+    document.getElementById("resetFormBtn").addEventListener("click", () => {
+      clearForm();
+    });
+
+    document.getElementById("filterStatus").addEventListener("change", renderTable);
+    document.getElementById("filterOwner").addEventListener("input", renderTable);
+    document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+      document.getElementById("filterStatus").value = "";
+      document.getElementById("filterOwner").value = "";
+      renderTable();
+    });
+
+    // Initial render
+    renderTable();
+  </script>
+</body>
+</html>
