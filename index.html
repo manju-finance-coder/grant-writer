@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCC Grant Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2B2D;
+    --paper:#FAF8F4;
+    --paper-2:#F1EEE6;
+    --teal:#2F6E68;
+    --teal-dark:#1E4B47;
+    --marigold:#C97F14;
+    --marigold-bg:#FBEEDA;
+    --rust:#A5401F;
+    --rust-bg:#FBE9E1;
+    --sage:#4C7A55;
+    --sage-bg:#E7F0E4;
+    --grey-text:#6B6459;
+    --border:#DDD7C9;
+    --border-strong:#C8C0AC;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Source Serif 4', serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* header */
+  header{margin-bottom:24px;}
+  .eyebrow{font-size:13px;color:var(--grey-text);margin:0 0 4px;}
+  h1{font-size:28px;font-weight:600;margin:0 0 6px;color:var(--teal-dark);}
+  .sub{font-size:14px;color:var(--grey-text);max-width:640px;line-height:1.5;margin:0;}
+
+  /* goal bar */
+  .goal-card{
+    margin-top:20px;
+    background:var(--paper-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:16px 18px;
+  }
+  .goal-top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .goal-top .label{font-size:13px;color:var(--grey-text);}
+  .goal-top .figures{font-size:15px;font-weight:600;}
+  .goal-top .figures span{color:var(--grey-text);font-weight:400;}
+  .bar-track{height:10px;background:#E7E1D2;border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--teal);border-radius:5px;transition:width .4s ease;}
+  .goal-note{font-size:12px;color:var(--grey-text);margin-top:8px;}
+
+  /* stats */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:6px;
+    overflow:hidden;
+    margin-top:20px;
+  }
+  .stat{background:#fff;padding:14px 16px;}
+  .stat .n{font-size:22px;font-weight:600;font-family:'Source Serif 4',serif;}
+  .stat .l{font-size:12px;color:var(--grey-text);margin-top:2px;}
+  .stat.warn .n{color:var(--rust);}
+
+  /* toolbar */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin:28px 0 14px;
+  }
+  select, input[type=text], input[type=number], input[type=date], textarea{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    padding:7px 10px;
+    border:1px solid var(--border-strong);
+    border-radius:5px;
+    background:#fff;
+    color:var(--ink);
+  }
+  select{cursor:pointer;}
+  .spacer{flex:1;}
+  button{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    padding:8px 14px;
+    border-radius:5px;
+    border:1px solid var(--teal);
+    background:var(--teal);
+    color:#fff;
+    cursor:pointer;
+  }
+  button:hover{background:var(--teal-dark);border-color:var(--teal-dark);}
+  button.ghost{
+    background:transparent;
+    color:var(--teal-dark);
+    border:1px solid var(--border-strong);
+  }
+  button.ghost:hover{background:var(--paper-2);}
+  button.text-btn{
+    background:none;border:none;color:var(--teal-dark);
+    padding:4px 6px;font-size:12px;text-decoration:underline;
+  }
+  button.text-btn.danger{color:var(--rust);}
+
+  /* table */
+  .table-wrap{border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#fff;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;
+    font-weight:500;
+    color:var(--grey-text);
+    font-size:12px;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    background:var(--paper-2);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:11px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FCFBF8;}
+  .gname{font-weight:500;}
+  .funder{color:var(--grey-text);font-size:12px;margin-top:2px;}
+  .amt{font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .due{white-space:nowrap;}
+  .due .days{display:block;font-size:11px;margin-top:1px;}
+  .due.urgent{color:var(--rust);font-weight:500;}
+  .due.soon{color:var(--marigold);font-weight:500;}
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:500;
+    padding:3px 9px;
+    border-radius:11px;
+    white-space:nowrap;
+  }
+  .b-researching{background:#EFEBE3;color:#6B6459;}
+  .b-drafting{background:var(--marigold-bg);color:#8A5A0E;}
+  .b-submitted{background:#E4EAF3;color:#2E4E7A;}
+  .b-awarded{background:var(--sage-bg);color:#33552F;}
+  .b-declined{background:var(--rust-bg);color:#7A2E14;}
+  .notes-cell{max-width:220px;color:var(--grey-text);font-size:12px;}
+  .row-actions{white-space:nowrap;}
+  .link-ico{color:var(--teal-dark);text-decoration:none;font-size:12px;}
+
+  .empty{padding:50px 20px;text-align:center;color:var(--grey-text);}
+  .empty h3{margin:0 0 6px;color:var(--ink);}
+  .empty p{font-size:13px;margin:0 0 16px;}
+
+  /* modal */
+  .overlay{
+    position:absolute;inset:0;background:rgba(28,43,45,.45);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:40px 16px;z-index:10;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:8px;max-width:520px;width:100%;
+    padding:22px 24px 24px;box-shadow:0 12px 40px rgba(0,0,0,.18);
+  }
+  .modal h2{font-size:18px;margin:0 0 4px;}
+  .modal .modal-sub{font-size:12px;color:var(--grey-text);margin:0 0 18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--grey-text);margin-bottom:5px;}
+  .field input, .field select, .field textarea{width:100%;}
+  .field textarea{resize:vertical;min-height:56px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .error-text{color:var(--rust);font-size:12px;margin-top:4px;}
+
+  @media (max-width:760px){
+    thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tbody tr{border-bottom:1px solid var(--border);padding:12px;}
+    tbody tr:hover{background:none;}
+    tbody td{border:none;padding:3px 0;}
+    tbody td::before{
+      content:attr(data-label);
+      display:inline-block;
+      width:100px;
+      font-size:11px;
+      color:var(--grey-text);
+    }
+    .gname{font-size:14px;}
+    .row2{grid-template-columns:1fr;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .toolbar .spacer{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app" style="position:relative;">
+
+  <header>
+    <p class="eyebrow">Tamil Community Centre &middot; Grant Committee</p>
+    <h1>Grant pipeline</h1>
+    <p class="sub">Tracking operating-support grants toward the committee's annual fundraising target. Capital construction and major-donor pledges are tracked separately.</p>
+  </header>
+
+  <div class="goal-card">
+    <div class="goal-top">
+      <span class="label">Awarded toward this year's operating target</span>
+      <span class="figures" id="goal-figures">$0 <span>of $200,000</span></span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="goal-bar" style="width:0%"></div></div>
+    <p class="goal-note" id="goal-note"></p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <select id="filter-status">
+      <option value="all">All statuses</option>
+      <option value="Researching">Researching</option>
+      <option value="Drafting">Drafting</option>
+      <option value="Submitted">Submitted</option>
+      <option value="Awarded">Awarded</option>
+      <option value="Declined">Declined</option>
+    </select>
+    <select id="sort-by">
+      <option value="due">Sort: due date</option>
+      <option value="amount">Sort: amount</option>
+      <option value="name">Sort: name</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="ghost" id="btn-reset" title="Load example grants to see how it works">Load sample grants</button>
+    <button id="btn-add">Add grant</button>
+  </div>
+
+  <div class="table-wrap" id="table-wrap"></div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modal-title">Add grant</h2>
+      <p class="modal-sub">Visible to everyone with this dashboard's link.</p>
+      <div class="field">
+        <label for="f-name">Grant name</label>
+        <input type="text" id="f-name" placeholder="e.g. Ontario Trillium Foundation &ndash; Seed Grant">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-funder">Funder</label>
+          <input type="text" id="f-funder" placeholder="e.g. Ontario Trillium Foundation">
+        </div>
+        <div class="field">
+          <label for="f-amount">Amount requested (CAD)</label>
+          <input type="number" id="f-amount" min="0" step="100" placeholder="15000">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-due">Due date</label>
+          <input type="date" id="f-due">
+        </div>
+        <div class="field">
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option>Researching</option>
+            <option>Drafting</option>
+            <option>Submitted</option>
+            <option>Awarded</option>
+            <option>Declined</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-assigned">Assigned to</label>
+          <input type="text" id="f-assigned" placeholder="Board member name">
+        </div>
+        <div class="field">
+          <label for="f-link">Application link</label>
+          <input type="text" id="f-link" placeholder="https://">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes" placeholder="Eligibility notes, required documents, contact person..."></textarea>
+      </div>
+      <p class="error-text" id="form-error" style="display:none;"></p>
+      <div class="modal-actions">
+        <button class="ghost" id="btn-cancel">Cancel</button>
+        <button id="btn-save">Save grant</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'tcc-grant-pipeline-v1';
+  var OPERATING_TARGET = 200000;
+  var grants = [];
+  var editingId = null;
+
+  function uid(){ return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function fmtMoney(n){
+    n = Number(n) || 0;
+    return '$' + n.toLocaleString('en-CA', {maximumFractionDigits:0});
+  }
+
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    var due = new Date(dateStr + 'T00:00:00');
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    return Math.round((due - today) / 86400000);
+  }
+
+  function fmtDate(dateStr){
+    if(!dateStr) return '&ndash;';
+    var d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-CA', {month:'short', day:'numeric', year:'numeric'});
+  }
+
+  function statusBadgeClass(s){
+    return 'b-' + s.toLowerCase();
+  }
+
+  async function loadGrants(){
+    try{
+      var res = await window.storage.get(STORAGE_KEY, true);
+      grants = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){
+      grants = [];
+    }
+    render();
+  }
+
+  async function saveGrants(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(grants), true);
+    }catch(e){
+      console.error('Storage error', e);
+    }
+    render();
+  }
+
+  function sampleGrants(){
+    var today = new Date();
+    function plusDays(n){
+      var d = new Date(today);
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0,10);
+    }
+    return [
+      {id: uid(), name:'Seed Grant', funder:'Ontario Trillium Foundation', amount:30000, due:plusDays(21), status:'Drafting', assigned:'', link:'https://otf.ca', notes:'Covers 1-year operating support for community programming.'},
+      {id: uid(), name:'Community Services Recovery Fund', funder:'United Way Greater Toronto', amount:15000, due:plusDays(45), status:'Researching', assigned:'', link:'', notes:'Check eligibility for newly-registered non-profits.'},
+      {id: uid(), name:'Community Investment Grant', funder:'City of Toronto', amount:20000, due:plusDays(8), status:'Submitted', assigned:'', link:'', notes:'Application submitted; awaiting review committee decision.'},
+      {id: uid(), name:'Multicultural Grant Program', funder:'Ontario Ministry of Citizenship', amount:25000, due:plusDays(60), status:'Researching', assigned:'', link:'', notes:''}
+    ];
+  }
+
+  function computeStats(){
+    var total = grants.length;
+    var pipelineValue = grants.filter(function(g){return g.status!=='Declined';}).reduce(function(a,g){return a + (Number(g.amount)||0);},0);
+    var awarded = grants.filter(function(g){return g.status==='Awarded';}).reduce(function(a,g){return a + (Number(g.amount)||0);},0);
+    var upcoming = grants.filter(function(g){
+      if(g.status==='Awarded' || g.status==='Declined') return false;
+      var d = daysUntil(g.due);
+      return d !== null && d >= 0 && d <= 30;
+    }).length;
+    return {total:total, pipelineValue:pipelineValue, awarded:awarded, upcoming:upcoming};
+  }
+
+  function renderStats(){
+    var s = computeStats();
+    var el = document.getElementById('stats');
+    el.innerHTML =
+      '<div class="stat"><div class="n">' + s.total + '</div><div class="l">Grants tracked</div></div>' +
+      '<div class="stat"><div class="n">' + fmtMoney(s.pipelineValue) + '</div><div class="l">Active pipeline value</div></div>' +
+      '<div class="stat"><div class="n">' + fmtMoney(s.awarded) + '</div><div class="l">Awarded to date</div></div>' +
+      '<div class="stat' + (s.upcoming>0 ? ' warn' : '') + '"><div class="n">' + s.upcoming + '</div><div class="l">Due within 30 days</div></div>';
+
+    var pct = Math.min(100, Math.round((s.awarded / OPERATING_TARGET) * 100));
+    document.getElementById('goal-bar').style.width = pct + '%';
+    document.getElementById('goal-figures').innerHTML = fmtMoney(s.awarded) + ' <span>of ' + fmtMoney(OPERATING_TARGET) + '</span>';
+    var remaining = Math.max(0, OPERATING_TARGET - s.awarded);
+    document.getElementById('goal-note').textContent = remaining > 0
+      ? fmtMoney(remaining) + ' still needed to cover this year\'s operating costs.'
+      : 'Operating target met for this year.';
+  }
+
+  function getFilteredSorted(){
+    var statusFilter = document.getElementById('filter-status').value;
+    var sortBy = document.getElementById('sort-by').value;
+    var list = grants.slice();
+    if(statusFilter !== 'all'){
+      list = list.filter(function(g){ return g.status === statusFilter; });
+    }
+    list.sort(function(a,b){
+      if(sortBy === 'amount') return (Number(b.amount)||0) - (Number(a.amount)||0);
+      if(sortBy === 'name') return a.name.localeCompare(b.name);
+      var da = a.due ? new Date(a.due) : new Date('2100-01-01');
+      var db = b.due ? new Date(b.due) : new Date('2100-01-01');
+      return da - db;
+    });
+    return list;
+  }
+
+  function renderTable(){
+    var wrap = document.getElementById('table-wrap');
+    var list = getFilteredSorted();
+
+    if(grants.length === 0){
+      wrap.innerHTML = '<div class="empty"><h3>No grants yet</h3><p>Add the first grant opportunity for the committee to track, or load sample grants to see how the dashboard works.</p></div>';
+      return;
+    }
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="empty"><h3>No grants match this filter</h3><p>Try a different status filter.</p></div>';
+      return;
+    }
+
+    var rows = list.map(function(g){
+      var d = daysUntil(g.due);
+      var dueClass = 'due';
+      var daysLabel = '';
+      if(d !== null && g.status !== 'Awarded' && g.status !== 'Declined'){
+        if(d < 0){ dueClass += ' urgent'; daysLabel = 'Overdue'; }
+        else if(d <= 7){ dueClass += ' urgent'; daysLabel = d===0?'Due today':(d + ' day' + (d===1?'':'s') + ' left'); }
+        else if(d <= 30){ dueClass += ' soon'; daysLabel = d + ' days left'; }
+      }
+      var linkHtml = g.link ? '<a class="link-ico" href="' + escapeAttr(g.link) + '" target="_blank" rel="noopener">Open link</a>' : '';
+      return '<tr>' +
+        '<td data-label="Grant"><div class="gname">' + escapeHtml(g.name || 'Untitled grant') + '</div><div class="funder">' + escapeHtml(g.funder||'') + '</div></td>' +
+        '<td data-label="Amount" class="amt">' + fmtMoney(g.amount) + '</td>' +
+        '<td data-label="Due" class="' + dueClass + '">' + fmtDate(g.due) + (daysLabel ? '<span class="days">' + daysLabel + '</span>' : '') + '</td>' +
+        '<td data-label="Assigned">' + escapeHtml(g.assigned || '&ndash;') + '</td>' +
+        '<td data-label="Status"><span class="badge ' + statusBadgeClass(g.status) + '">' + g.status + '</span></td>' +
+        '<td data-label="Notes" class="notes-cell">' + escapeHtml(g.notes || '') + (linkHtml ? '<div style="margin-top:4px;">'+linkHtml+'</div>' : '') + '</td>' +
+        '<td data-label="" class="row-actions">' +
+          '<button class="text-btn" data-edit="' + g.id + '">Edit</button>' +
+          '<button class="text-btn danger" data-del="' + g.id + '">Delete</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    wrap.innerHTML =
+      '<table><thead><tr>' +
+        '<th>Grant</th><th>Amount</th><th>Due</th><th>Assigned</th><th>Status</th><th>Notes</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+
+    wrap.querySelectorAll('[data-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){ openModal(btn.getAttribute('data-edit')); });
+    });
+    wrap.querySelectorAll('[data-del]').forEach(function(btn){
+      btn.addEventListener('click', function(){ deleteGrant(btn.getAttribute('data-del')); });
+    });
+  }
+
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = String(str);
+    return d.innerHTML;
+  }
+  function escapeAttr(str){
+    return String(str).replace(/"/g,'&quot;');
+  }
+
+  function render(){
+    renderStats();
+    renderTable();
+  }
+
+  function openModal(id){
+    editingId = id || null;
+    document.getElementById('form-error').style.display = 'none';
+    var g = id ? grants.find(function(x){return x.id===id;}) : null;
+    document.getElementById('modal-title').textContent = g ? 'Edit grant' : 'Add grant';
+    document.getElementById('f-name').value = g ? g.name : '';
+    document.getElementById('f-funder').value = g ? g.funder : '';
+    document.getElementById('f-amount').value = g ? g.amount : '';
+    document.getElementById('f-due').value = g ? g.due : '';
+    document.getElementById('f-status').value = g ? g.status : 'Researching';
+    document.getElementById('f-assigned').value = g ? g.assigned : '';
+    document.getElementById('f-link').value = g ? g.link : '';
+    document.getElementById('f-notes').value = g ? g.notes : '';
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('f-name').focus();
+  }
+
+  function closeModal(){
+    document.getElementById('overlay').classList.remove('open');
+    editingId = null;
+  }
+
+  function deleteGrant(id){
+    grants = grants.filter(function(g){ return g.id !== id; });
+    saveGrants();
+  }
+
+  function saveForm(){
+    var name = document.getElementById('f-name').value.trim();
+    var errEl = document.getElementById('form-error');
+    if(!name){
+      errEl.textContent = 'Enter a grant name first.';
+      errEl.style.display = 'block';
+      return;
+    }
+    var data = {
+      id: editingId || uid(),
+      name: name,
+      funder: document.getElementById('f-funder').value.trim(),
+      amount: Number(document.getElementById('f-amount').value) || 0,
+      due: document.getElementById('f-due').value,
+      status: document.getElementById('f-status').value,
+      assigned: document.getElementById('f-assigned').value.trim(),
+      link: document.getElementById('f-link').value.trim(),
+      notes: document.getElementById('f-notes').value.trim()
+    };
+    if(editingId){
+      grants = grants.map(function(g){ return g.id === editingId ? data : g; });
+    } else {
+      grants.push(data);
+    }
+    closeModal();
+    saveGrants();
+  }
+
+  document.getElementById('btn-add').addEventListener('click', function(){ openModal(null); });
+  document.getElementById('btn-cancel').addEventListener('click', closeModal);
+  document.getElementById('btn-save').addEventListener('click', saveForm);
+  document.getElementById('overlay').addEventListener('click', function(e){
+    if(e.target.id === 'overlay') closeModal();
+  });
+  document.getElementById('filter-status').addEventListener('change', render);
+  document.getElementById('sort-by').addEventListener('change', render);
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    if(grants.length > 0){
+      var ok = confirm('Add 4 sample grants to the current list? This will not remove existing grants.');
+      if(!ok) return;
+    }
+    grants = grants.concat(sampleGrants());
+    saveGrants();
+  });
+
+  loadGrants();
+})();
+</script>
+</body>
+</html>
